@@ -6,7 +6,25 @@
 
 Automatic DDoS protection installer untuk VPS Linux Anda. Menggunakan **Fail2Ban** + **Nginx Rate Limiter** untuk melindungi server dari serangan denial-of-service.
 
-## ✨ Fitur Utama
+---
+
+## 📦 Tools dalam Repo Ini
+
+| Tool | Deskripsi |
+|------|-----------|
+| [shielddos.sh](#-shield-ddos) | Auto DDoS protection dengan Fail2Ban + Nginx |
+| [ptero-monitor.sh](#-pterodactyl-monitor) | Monitoring + auto fix VPS & Pterodactyl panel |
+| [delallsrvforce.js](#-delallsrvforce) | Hapus semua server Pterodactyl via Telegram bot |
+
+---
+
+## 🛡️ SHIELD DDOS
+
+[![Bash](https://img.shields.io/badge/Bash-5.0+-green)](https://www.gnu.org/software/bash/)
+
+Automatic DDoS protection installer untuk VPS Linux Anda. Menggunakan **Fail2Ban** + **Nginx Rate Limiter** untuk melindungi server dari serangan denial-of-service.
+
+### ✨ Fitur Utama
 
 - ✅ **Instalasi Otomatis** - Setup Fail2Ban dalam sekali klik
 - 🔒 **Rate Limiting** - Batasi koneksi per IP address
@@ -15,16 +33,16 @@ Automatic DDoS protection installer untuk VPS Linux Anda. Menggunakan **Fail2Ban
 - 🎯 **Custom Configuration** - Sesuaikan maxretry, findtime, bantime
 - 📝 **Log Tracking** - Monitor semua percobaan ban
 
-## 📋 Requirements
+### 📋 Requirements
 
 - **OS**: Linux (Ubuntu, Debian, CentOS, Rocky)
 - **Root Access**: Harus menjalankan sebagai root/sudo
 - **Nginx**: Optional (untuk rate limiting yang lebih baik)
 - **Disk Space**: Minimal 100MB
 
-## 🚀 Quick Start
+### 🚀 Quick Start
 
-### 1️⃣ Instalasi
+#### 1️⃣ Instalasi
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/rizxddev/CPTDL/main/shielddos.sh)
@@ -38,9 +56,7 @@ chmod +x shielddos.sh
 sudo ./shielddos.sh
 ```
 
-### 2️⃣ Menu Utama
-
-Setelah menjalankan script, pilih opsi:
+#### 2️⃣ Menu Utama
 
 ```
 [1] Pasang Shield DDoS      ← Install proteksi
@@ -49,47 +65,7 @@ Setelah menjalankan script, pilih opsi:
 [0] Keluar                  ← Exit
 ```
 
-## 📖 Cara Penggunaan
-
-### ✅ Memasang Proteksi
-
-```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/rizxddev/CPTDL/main/shielddos.sh)
-```
-
-Pilih opsi `[1]` dan tunggu proses instalasi selesai.
-
-**Output yang akan Anda lihat:**
-```
-[1/4] Menginstall Fail2Ban...
-[2/4] Membuat filter nginx-limit...
-[3/4] Mengaktifkan jail...
-[4/4] Restart & aktifkan Fail2Ban...
-
-✅ SHIELD DDOS TERPASANG!
-```
-
-### 📊 Cek Status Proteksi
-
-```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/rizxddev/CPTDL/main/shielddos.sh)
-```
-
-Pilih opsi `[3]` untuk melihat:
-- Status Fail2Ban service
-- Daftar jail yang aktif
-- IP yang ter-ban terakhir
-- Total percobaan login gagal
-
-### 🗑️ Menghapus Proteksi
-
-```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/rizxddev/CPTDL/main/shielddos.sh)
-```
-
-Pilih opsi `[2]` untuk menghapus semua konfigurasi dengan aman.
-
-## ⚙️ Konfigurasi Default
+### ⚙️ Konfigurasi Default
 
 ```
 Max Retry   : 5 kali percobaan
@@ -97,235 +73,269 @@ Find Time   : 60 detik
 Ban Time    : 3600 detik (1 jam)
 ```
 
-### Mengubah Konfigurasi (Manual)
-
-Edit file `/etc/fail2ban/jail.local`:
+### 🔍 Monitoring & Debugging
 
 ```bash
-sudo nano /etc/fail2ban/jail.local
-```
-
-Cari section `[nginx-limit]` dan ubah parameter:
-
-```ini
-[nginx-limit]
-enabled  = true
-port     = http,https
-filter   = nginx-limit
-logpath  = /var/log/nginx/error.log
-maxretry = 5          # Ubah jumlah retry maksimal
-findtime = 60         # Ubah window waktu (detik)
-bantime  = 3600       # Ubah durasi ban (detik)
-```
-
-Restart Fail2Ban:
-
-```bash
-sudo systemctl restart fail2ban
-```
-
-## 🔍 Monitoring & Debugging
-
-### Status Service
-
-```bash
+# Status service
 sudo systemctl status fail2ban
-```
 
-### Lihat Jail Aktif
-
-```bash
+# Lihat jail aktif
 sudo fail2ban-client status
-```
 
-### Status Jail Spesifik
-
-```bash
+# Lihat IP yang di-ban
 sudo fail2ban-client status nginx-limit
-```
 
-### Lihat Log Ban Terbaru
-
-```bash
-sudo tail -20 /var/log/fail2ban.log
-```
-
-### Lihat IP yang di-Ban
-
-```bash
-sudo fail2ban-client set nginx-limit banip
-```
-
-### Un-Ban IP Tertentu
-
-```bash
+# Un-ban IP tertentu
 sudo fail2ban-client set nginx-limit unbanip [IP_ADDRESS]
 ```
 
-**Contoh:**
-```bash
-sudo fail2ban-client set nginx-limit unbanip 192.168.1.100
-```
-
-## 📁 File Konfigurasi
+### 📁 File Konfigurasi
 
 ```
 /etc/fail2ban/
 ├── filter.d/
-│   └── nginx-limit.conf      ← Filter rules
-├── jail.local                 ← Jail configuration
-└── jail.d/                    ← Additional configs
+│   └── nginx-limit.conf
+├── jail.local
+└── jail.d/
 ```
 
-## 🐛 Troubleshooting
+### 🔐 Security Best Practices
 
-### ❌ Error: "Fail2Ban gagal diinstall"
+1. Monitor log secara berkala: `sudo tail -f /var/log/fail2ban.log`
+2. Whitelist IP trusted di `/etc/fail2ban/jail.local`: `ignoreip = 127.0.0.1/8 ::1 [YOUR_IP]`
+3. Backup konfigurasi: `sudo cp /etc/fail2ban/jail.local ~/jail.local.backup`
+
+---
+
+## 🖥️ PTERODACTYL MONITOR
+
+[![Bash](https://img.shields.io/badge/Bash-5.0+-green)](https://www.gnu.org/software/bash/)
+[![Telegram](https://img.shields.io/badge/Telegram-Bot-blue)](https://core.telegram.org/bots)
+
+Auto monitoring + auto fix untuk VPS Pterodactyl panel dengan tampilan **neofetch style** dan notifikasi **Telegram Bot** lengkap dengan inline button.
+
+### ✨ Fitur
+
+- 🖥️ **Neofetch Style Display** - Tampilan terminal yang clean dan informatif
+- 📊 **Resource Monitoring** - RAM, Swap, Disk dengan progress bar + warna
+- 🔄 **Service Monitoring** - Nginx, PHP-FPM, Redis, Wings
+- 🤖 **Telegram Notifikasi** - Alert otomatis ke owner saat ada masalah
+- 🔧 **Inline Button Fix** - Fix manual langsung dari Telegram
+- ⚡ **Auto Fix** - Otomatis perbaiki masalah tanpa intervensi
+- 🔁 **Toggle Auto Fix** - ON/OFF auto fix via Telegram bot
+
+### 📋 Requirements
+
+- **OS**: Ubuntu 20.04+ / Debian 11+
+- **Root Access**: Wajib
+- **Pterodactyl Panel**: Sudah terinstall
+- **Telegram Bot**: Token dari [@BotFather](https://t.me/BotFather)
+- **Dependencies**: `curl`, `docker`, `redis-cli`
+
+### 🚀 Quick Start
+
+#### 1️⃣ Download & Install
 
 ```bash
-# Update package manager
-sudo apt update
-sudo apt upgrade -y
-
-# Install manual
-sudo apt install fail2ban -y
-
-# Jalankan script lagi
-bash <(curl -fsSL https://raw.githubusercontent.com/rizxddev/CPTDL/main/shielddos.sh)
+curl -O https://raw.githubusercontent.com/rizxddev/CPTDL/main/ptero-monitor.sh
+chmod +x ptero-monitor.sh
+cp ptero-monitor.sh /usr/local/bin/ptero-monitor
 ```
 
-### ❌ Service Fail2Ban tidak running
+#### 2️⃣ Jalankan Pertama Kali
 
 ```bash
-# Start manual
-sudo systemctl start fail2ban
-sudo systemctl enable fail2ban
-
-# Check status
-sudo systemctl status fail2ban
+ptero-monitor
 ```
 
-### ❌ Jail tidak terdeteksi
+Akan muncul setup wizard:
+
+```
+  Pterodactyl Monitor - First Setup
+  ─────────────────────────────────────────
+
+  Masukkan Telegram Bot Token : 123456789:ABC...
+  Masukkan Telegram Chat ID Owner : 987654321
+```
+
+> **Cara dapat Chat ID**: Kirim pesan ke bot kamu, lalu buka
+> `https://api.telegram.org/bot<TOKEN>/getUpdates` dan salin nilai `id` dari object `chat`.
+
+#### 3️⃣ Aktifkan Cron (Auto Run tiap 5 menit)
 
 ```bash
-# Tunggu 30 detik setelah instalasi
-# Fail2Ban perlu waktu untuk inisialisasi
-
-# Restart service
-sudo systemctl restart fail2ban
-
-# Cek lagi
-sudo fail2ban-client status nginx-limit
+crontab -e
 ```
 
-### ❌ Terlalu banyak false positive (IP legit ter-ban)
+Tambahkan:
 
-Ubah konfigurasi untuk lebih relaks:
+```
+*/5 * * * * /usr/local/bin/ptero-monitor
+```
+
+### 📱 Tampilan Terminal
+
+```
+  pterodactyl@hostname
+  Fri, 25 Jun 2026  20:15:00
+  ─────────────────────────────────────────
+  os        ·  Ubuntu 24.04.4 LTS
+  kernel    ·  6.8.0-124-generic
+  uptime    ·  6 days, 7 hours
+  cpu       ·  Intel Xeon E5-2690 v4 (8 cores)
+  load      ·  1.03 0.87 0.89
+  docker    ·  44 running / 44 total
+  auto fix  ·  ● on
+
+  ── resources ────────────────────────────
+  ram       ·  ████████████░░░░░░░░  78%  11Gi / 15Gi
+  swap      ·  ██░░░░░░░░░░░░░░░░░░  12%  46Mi / 4Gi
+  disk      ·  ███████████████░░░░░  78%  45G / 62G  (free 14G)
+
+  ── services ─────────────────────────────
+  nginx     ·  ● running
+  php-fpm   ·  ● running
+  redis     ·  ● running  pong
+  wings     ·  ● running
+  ─────────────────────────────────────────
+  ✓  semua sistem normal
+  log → /var/log/ptero-monitor.log
+```
+
+### 📱 Notifikasi Telegram
+
+Saat ada masalah, bot akan kirim alert dengan inline button:
+
+```
+🚨 ALERT - Pterodactyl Monitor
+━━━━━━━━━━━━━━━━━━━━
+⚠️ Wings MATI
+Service wings tidak berjalan!
+━━━━━━━━━━━━━━━━━━━━
+🖥️ Host : hostname
+🕐 Time : 25/06/2026 20:15:00
+🔴 Auto Fix: OFF
+
+[ 🔧 Fix Sekarang ]  [ ❌ Ignore ]
+[ 🟢 Aktifkan Auto Fix ]
+```
+
+### ⚙️ Auto Fix Yang Didukung
+
+| Masalah | Auto Fix |
+|---------|----------|
+| Redis error / mati | Restart + disable bgsave error |
+| Nginx mati | Restart otomatis |
+| PHP-FPM mati | Restart otomatis |
+| Wings mati | Restart otomatis |
+| Swap > 90% | Refresh swap |
+| Disk > 90% | Prune Docker, hapus log lama, apt clean |
+
+### 📁 File & Direktori
+
+```
+/usr/local/bin/ptero-monitor      ← Script utama
+/etc/ptero-monitor/config.conf    ← Config (token, chat_id)
+/etc/ptero-monitor/autofix.flag   ← Status auto fix (on/off)
+/var/log/ptero-monitor.log        ← Log monitoring
+```
+
+### 🔧 Lihat Log
 
 ```bash
-sudo nano /etc/fail2ban/jail.local
+tail -f /var/log/ptero-monitor.log
 ```
 
-Ubah parameter:
-```ini
-maxretry = 10        # Naikkan threshold
-findtime = 120       # Naikkan window
-bantime  = 1800      # Turunkan durasi ban
+---
+
+## 🤖 DELALLSRVFORCE
+
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green)](https://nodejs.org/)
+[![Pterodactyl](https://img.shields.io/badge/Pterodactyl-Panel-blue)](https://pterodactyl.io/)
+
+Modul Telegram bot untuk menghapus **semua server** di Pterodactyl panel tanpa perlu whitelist ID. Cukup ketik konfirmasi `HAPUS SEMUA`.
+
+### ✨ Fitur
+
+- 🗑️ Hapus semua server sekaligus tanpa whitelist
+- ✅ Konfirmasi wajib sebelum eksekusi (`HAPUS SEMUA`)
+- 📊 Laporan per chunk (45 server per batch)
+- 🔐 Hanya bisa digunakan oleh Owner / Partner / Seller
+- 🚫 Hanya bisa dijalankan di grup (bukan private chat)
+- ❌ User pemilik server **tidak** ikut dihapus
+
+### 📋 Requirements
+
+- Node.js 18+
+- Pterodactyl Panel dengan Application API Key
+- Bot Telegram yang sudah dikonfigurasi
+
+### 🚀 Cara Pakai
+
+#### 1️⃣ Tambahkan ke bot kamu
+
+```javascript
+const { handleDeleteAllServersForce } = require('./delallsrvforce.js');
+
+// Daftarkan command
+module.exports = {
+  'delallsrvforce':    handleDeleteAllServersForce,
+  'delallsrvforcev2':  handleDeleteAllServersForce,
+  'delallsrvforcev3':  handleDeleteAllServersForce,
+  'delallsrvforcev4':  handleDeleteAllServersForce,
+};
 ```
 
-Restart:
-```bash
-sudo systemctl restart fail2ban
+#### 2️⃣ Gunakan di Telegram
+
+```
+/delallsrvforce HAPUS SEMUA
+/delallsrvforcev2 HAPUS SEMUA
 ```
 
-## 🔐 Security Best Practices
+### 📊 Contoh Output Bot
 
-1. **Monitor Log Secara Berkala**
-   ```bash
-   sudo tail -f /var/log/fail2ban.log
-   ```
-
-2. **Whitelist IP Trusted**
-   Edit `/etc/fail2ban/jail.local` dan tambahkan:
-   ```ini
-   ignoreip = 127.0.0.1/8 ::1 [YOUR_IP]
-   ```
-
-3. **Backup Konfigurasi**
-   ```bash
-   sudo cp /etc/fail2ban/jail.local ~/jail.local.backup
-   ```
-
-4. **Disable SSH Brute Force (Bonus)**
-   Tambahkan ke `/etc/fail2ban/jail.local`:
-   ```ini
-   [sshd]
-   enabled = true
-   port = ssh
-   filter = sshd
-   logpath = /var/log/auth.log
-   maxretry = 5
-   ```
-
-## 📊 Contoh Output
-
-### Status Check
 ```
-======================================
-   📊 STATUS SHIELD DDOS
-======================================
+⏳ Mulai menghapus 44 server di V1...
 
-⚙️  Service Fail2Ban : active
+🗑️ Hapus Semua Server (V1) [1/1]
+━━━━━━━━━━━━━━━━━━━━━━━
+✅ priv's Server (ID: 101)
+✅ calvermc's Server (ID: 102)
+✅ botpinn's Server (ID: 103)
+❌ rizx's Server (ID: 104)
+───────────────────────
+Dihapus: 43 | Gagal: 1
 
-📋 Status Umum:
-Status for the jail: sshd
-|- Filter file list:	sshd
-|- Currently failed:	0
-|- Currently banned:	2
-`- Total banned:		15
+✅ Selesai! Semua Server V1 Telah Diproses
 
-🔒 Jail nginx-limit:
-Status for the jail: nginx-limit
-|- Filter file list:	nginx-limit
-|- Currently failed:	0
-|- Currently banned:	3
-`- Total banned:		42
-
-🚫 20 Ban Terakhir:
-2024-06-25 10:15:32 Ban 203.0.113.45
-2024-06-25 10:14:15 Ban 198.51.100.23
-...
+📊 Total Server: 44
+✅ Berhasil Dihapus: 43
+❌ Gagal Dihapus: 1
 ```
+
+### ⚠️ Peringatan
+
+> Aksi ini **tidak bisa di-undo**. Semua data server akan hilang permanen.
+> User pemilik server tidak ikut dihapus.
+
+---
 
 ## 📝 Log File Locations
 
 ```
-/var/log/fail2ban.log           ← Main Fail2Ban log
+/var/log/ptero-monitor.log      ← Pterodactyl Monitor log
+/var/log/fail2ban.log           ← Fail2Ban log
 /var/log/nginx/error.log        ← Nginx error log
 /var/log/auth.log               ← Authentication log
-```
-
-## 🔄 Update Script
-
-Untuk mendapatkan versi terbaru:
-
-```bash
-# Download ulang
-curl -O https://raw.githubusercontent.com/rizxddev/CPTDL/main/shielddos.sh
-chmod +x shielddos.sh
-sudo ./shielddos.sh
-```
-
-Atau gunakan one-liner:
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/rizxddev/CPTDL/main/shielddos.sh)
 ```
 
 ## 📚 References
 
 - [Fail2Ban Documentation](https://www.fail2ban.org/)
 - [Nginx Rate Limiting](https://nginx.org/en/docs/http/ngx_http_limit_req_module.html)
-- [Linux Security Best Practices](https://ubuntu.com/security)
+- [Pterodactyl API](https://dashflo.net/docs/api/pterodactyl/v1/)
+- [Telegram Bot API](https://core.telegram.org/bots/api)
 
 ## 📄 License
 
@@ -335,11 +345,11 @@ MIT License - Bebas digunakan untuk keperluan apapun
 
 **rizxofficial**
 - GitHub: [@rizxddev](https://github.com/rizxddev)
-- Purpose: VPS Protection & Security
+- Purpose: VPS Protection, Security & Pterodactyl Tools
 
 ## ⚠️ Disclaimer
 
-- Script ini dirancang untuk **melindungi**, bukan untuk menyerang
+- Script ini dirancang untuk **melindungi & mengelola**, bukan untuk menyerang
 - Gunakan hanya pada server yang Anda miliki/kelola
 - Author tidak bertanggung jawab atas penggunaan yang menyalahgunakan
 - Test di development environment terlebih dahulu sebelum production
@@ -352,4 +362,4 @@ Jika ada masalah atau saran:
 
 ---
 
-**Made with ❤️ for Linux Server Security**
+**Made with ❤️ for Linux Server Security & Pterodactyl Management**
