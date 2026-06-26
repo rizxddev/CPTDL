@@ -16,27 +16,6 @@ if (( EUID != 0 )); then
     exit 1
 fi
 
-clear
-echo -e "${CYAN}======================================${NC}"
-echo -e "   ${GREEN}🛡  SHIELD DDOS - rizxofficial${NC}"
-echo -e "${CYAN}======================================${NC}"
-echo ""
-echo -e " ${YELLOW}[1]${NC} Pasang Shield DDoS"
-echo -e " ${YELLOW}[2]${NC} Lepas Shield DDoS"
-echo -e " ${YELLOW}[3]${NC} Cek Status"
-echo -e " ${YELLOW}[0]${NC} Keluar"
-echo ""
-echo -ne "Pilih opsi: "
-read -r PILIHAN
-
-case "$PILIHAN" in
-    1) do_install ;;
-    2) do_uninstall ;;
-    3) do_status ;;
-    0) echo "Keluar."; exit 0 ;;
-    *) echo -e "${RED}Pilihan tidak valid.${NC}"; exit 1 ;;
-esac
-
 do_install() {
     echo ""
     echo -e "${CYAN}[1/4] Menginstall Fail2Ban...${NC}"
@@ -146,3 +125,24 @@ do_status() {
     grep 'Ban ' /var/log/fail2ban.log 2>/dev/null | tail -20 || echo "(tidak ada log ban)"
     echo ""
 }
+
+clear
+echo -e "${CYAN}======================================${NC}"
+echo -e "   ${GREEN}🛡  SHIELD DDOS - rizxofficial${NC}"
+echo -e "${CYAN}======================================${NC}"
+echo ""
+echo -e " ${YELLOW}[1]${NC} Pasang Shield DDoS"
+echo -e " ${YELLOW}[2]${NC} Lepas Shield DDoS"
+echo -e " ${YELLOW}[3]${NC} Cek Status"
+echo -e " ${YELLOW}[0]${NC} Keluar"
+echo ""
+echo -ne "Pilih opsi: "
+read -r PILIHAN
+
+case "$PILIHAN" in
+    1) do_install ;;
+    2) do_uninstall ;;
+    3) do_status ;;
+    0) echo "Keluar."; exit 0 ;;
+    *) echo -e "${RED}Pilihan tidak valid.${NC}"; exit 1 ;;
+esac
