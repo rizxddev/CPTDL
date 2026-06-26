@@ -304,7 +304,8 @@ collect() {
             fix_redis; sleep 1
             tg_ok "Redis otomatis di-fix (restart + bgsave error dinonaktifkan)"
         else
-            tg_alert "Redis Bermasalah" "• Service: $(systemctl is-active redis)\n• bgsave error: ${redis_bgsave}" "redis"
+            tg_alert "Redis Bermasalah" "• Service: $(systemctl is-active redis)
+• bgsave error: ${redis_bgsave}" "redis"
         fi
     fi
     REDIS_STATUS=$(status_icon redis)
@@ -354,9 +355,11 @@ collect() {
             tg_ok "Disk otomatis dibersihkan. Sisa: <b>${new_avail}</b>"
             DISK_PCT=$(df / | awk 'NR==2 {print $5}' | tr -d '%')
             DISK_AVAIL="$new_avail"
-        else tg_alert "Disk KRITIS" "Disk usage: <b>${DISK_PCT}%</b>\nSisa: <b>${DISK_AVAIL}</b>" "disk"; fi
+        else tg_alert "Disk KRITIS" "Disk usage: <b>${DISK_PCT}%</b>
+Sisa: <b>${DISK_AVAIL}</b>" "disk"; fi
     elif [ "$DISK_PCT" -ge "$DISK_WARN" ]; then
-        tg_alert "Disk Warning" "Disk usage: <b>${DISK_PCT}%</b>\nSisa: <b>${DISK_AVAIL}</b>" "disk"
+        tg_alert "Disk Warning" "Disk usage: <b>${DISK_PCT}%</b>
+Sisa: <b>${DISK_AVAIL}</b>" "disk"
     fi
 }
 
