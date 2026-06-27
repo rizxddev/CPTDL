@@ -168,6 +168,34 @@ Monitor akan otomatis memperbaiki masalah." ;;
                     -d "text=🔴 Auto Fix dimatikan!" &>/dev/null
                 tg_send "🔴 <b>Auto Fix dimatikan!</b>
 Monitor akan mengirim alert tapi tidak auto fix." ;;
+            menu_autofix)
+                local status_label
+                [ "$AUTOFIX" = "on" ] && status_label="🟢 ON" || status_label="🔴 OFF"
+                curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery" \
+                    -d "callback_query_id=${cb_id}" &>/dev/null
+                local kb="{\"inline_keyboard\":[[{\"text\":\"🟢 ON\",\"callback_data\":\"set_autofix_on\"},{\"text\":\"🔴 OFF\",\"callback_data\":\"set_autofix_off\"}]]}"
+                tg_send "⚙️ <b>Status Auto Fix saat ini:</b> ${status_label}
+
+Pilih mode di bawah ini:" "$kb" ;;
+            set_autofix_on)
+                echo "on" > "$AUTOFIX_FLAG"
+                curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery" \
+                    -d "callback_query_id=${cb_id}" \
+                    -d "text=✅ Auto Fix: ON" &>/dev/null
+                tg_send "🟢 <b>Auto Fix sekarang: ON</b>
+Monitor akan otomatis memperbaiki masalah yang terdeteksi." ;;
+            set_autofix_off)
+                echo "off" > "$AUTOFIX_FLAG"
+                curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery" \
+                    -d "callback_query_id=${cb_id}" \
+                    -d "text=🔴 Auto Fix: OFF" &>/dev/null
+                tg_send "🔴 <b>Auto Fix sekarang: OFF</b>
+Monitor hanya akan mengirim alert tanpa auto fix." ;;
+            menu_speedtest)
+                curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery" \
+                    -d "callback_query_id=${cb_id}" \
+                    -d "text=⚡ Menjalankan speed test, tunggu sebentar..." &>/dev/null
+                run_speedtest ;;
             fix_redis)
                 systemctl restart redis &>/dev/null
                 redis-cli config set stop-writes-on-bgsave-error no &>/dev/null
@@ -213,6 +241,127 @@ Monitor akan mengirim alert tapi tidak auto fix." ;;
         [ -n "$update_id" ] && \
             curl -s "https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=$(( update_id + 1 ))" &>/dev/null
     done
+
+    # ── HANDLE COMMAND /start (buka menu utama) ──────────────
+    if echo "$updates" | grep -q '"text":"/start"'; then
+        local msg_chat_id msg_update_id
+        msg_chat_id=$(echo "$updates" | grep -oE '"chat":\{"id":[0-9]+' | head -1 | grep -oE '[0-9]+$')
+        if [ "$msg_chat_id" = "$CHAT_ID" ]; then
+            send_main_menu
+        fi
+        msg_update_id=$(echo "$updates" | grep -o '"update_id":[0-9]*' | tail -1 | grep -o '[0-9]*')
+        [ -n "$msg_update_id" ] && \
+            curl -s "https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=$(( msg_update_id + 1 ))" &>/dev/null
+    fi
+}
+
+# ── MENU UTAMA (/start) ──────────────────────────────────────
+send_main_menu() {
+    local os kernel arch cpu_model cpu_cores cpu_cache aesni vmx \
+          ram_used ram_total swap_used swap_total disk_used disk_total \
+          uptime_h load_avg ipv4_status virt
+
+    os=$(grep PRETTY_NAME /etc/os-release | cut -d'"' -f2)
+    kernel=$(uname -r)
+    arch=$(uname -m)
+    cpu_model=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | xargs)
+    cpu_cores=$(nproc)
+    cpu_cache=$(grep -m1 'cache size' /proc/cpuinfo | cut -d: -f2 | xargs)
+    grep -q ' aes ' /proc/cpuinfo && aesni="✓ Enabled" || aesni="✗ Disabled"
+    grep -Eq ' (vmx|svm) ' /proc/cpuinfo && vmx="✓ Enabled" || vmx="✗ Disabled"
+
+    ram_total=$(free -h | awk '/Mem/ {print $2}')
+    ram_used=$(free -h  | awk '/Mem/ {print $3}')
+    swap_total=$(free -h | awk '/Swap/ {print $2}')
+    swap_used=$(free -h  | awk '/Swap/ {print $3}')
+    disk_total=$(df -h / | awk 'NR==2 {print $2}')
+    disk_used=$(df -h / | awk 'NR==2 {print $3}')
+    uptime_h=$(uptime -p | sed 's/up //')
+    load_avg=$(cut -d' ' -f1-3 /proc/loadavg)
+
+    curl -s -4 --max-time 2 ifconfig.me &>/dev/null \
+        && ipv4_status="✓ Online" || ipv4_status="✗ Offline"
+
+    virt=$(systemd-detect-virt 2>/dev/null)
+    [ -z "$virt" ] && virt="none"
+
+    # escape karakter HTML biar gak merusak parse_mode Telegram
+    local esc='s/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'
+    os=$(sed "$esc" <<< "$os")
+    cpu_model=$(sed "$esc" <<< "$cpu_model")
+
+    local sep="--------------------------------------------------------------"
+
+    local info
+    info=$(cat << INFO_EOF
+${sep}
+ Host           : $(hostname)
+ OS             : ${os}
+ Kernel         : ${kernel}
+ Arch           : ${arch}
+${sep}
+ CPU Model      : ${cpu_model}
+ CPU Cores      : ${cpu_cores}
+ CPU Cache      : ${cpu_cache}
+ AES-NI         : ${aesni}
+ VM-x/AMD-V     : ${vmx}
+${sep}
+ Total RAM      : ${ram_total} (${ram_used} Used)
+ Total Swap     : ${swap_total} (${swap_used} Used)
+ Total Disk     : ${disk_total} (${disk_used} Used)
+${sep}
+ System Uptime  : ${uptime_h}
+ Load Average   : ${load_avg}
+ Virtualization : ${virt}
+ IPv4           : ${ipv4_status}
+${sep}
+INFO_EOF
+)
+
+    local text="👋 <b>Pterodactyl Monitor</b>
+
+<blockquote><pre>${info}</pre></blockquote>
+
+Pilih menu di bawah:"
+
+    local kb="{\"inline_keyboard\":[[{\"text\":\"⚙️ AUTO FIX\",\"callback_data\":\"menu_autofix\"},{\"text\":\"⚡ SPEED TEST\",\"callback_data\":\"menu_speedtest\"}]]}"
+    tg_send "$text" "$kb"
+}
+
+# ── SPEED TEST ────────────────────────────────────────────────
+run_speedtest() {
+    command -v speedtest-cli &>/dev/null || \
+        pip3 install --quiet --break-system-packages speedtest-cli &>/dev/null
+
+    local raw ping_res dl_res ul_res
+    raw=$(speedtest-cli --simple 2>/dev/null)
+
+    if [ -z "$raw" ]; then
+        tg_send "❌ <b>Speed test gagal dijalankan.</b>
+Pastikan <code>speedtest-cli</code> bisa terinstall di server ini."
+        return
+    fi
+
+    ping_res=$(echo "$raw" | awk -F': ' '/Ping/ {print $2}')
+    dl_res=$(echo "$raw"   | awk -F': ' '/Download/ {print $2}')
+    ul_res=$(echo "$raw"   | awk -F': ' '/Upload/ {print $2}')
+
+    local info
+    info=$(cat << INFO_EOF
+Host     : $(hostname)
+Ping     : ${ping_res}
+Download : ${dl_res}
+Upload   : ${ul_res}
+Waktu    : $(date '+%d/%m/%Y %H:%M:%S')
+INFO_EOF
+)
+
+    local text="⚡ <b>SPEED TEST RESULT</b>
+
+<blockquote><pre>${info}</pre></blockquote>"
+
+    tg_send "$text"
+    log "SPEEDTEST: ping=${ping_res} dl=${dl_res} ul=${ul_res}"
 }
 
 # ── AUTO FIX ────────────────────────────────────────────────
@@ -304,8 +453,7 @@ collect() {
             fix_redis; sleep 1
             tg_ok "Redis otomatis di-fix (restart + bgsave error dinonaktifkan)"
         else
-            tg_alert "Redis Bermasalah" "• Service: $(systemctl is-active redis)
-• bgsave error: ${redis_bgsave}" "redis"
+            tg_alert "Redis Bermasalah" "• Service: $(systemctl is-active redis)\n• bgsave error: ${redis_bgsave}" "redis"
         fi
     fi
     REDIS_STATUS=$(status_icon redis)
@@ -355,11 +503,9 @@ collect() {
             tg_ok "Disk otomatis dibersihkan. Sisa: <b>${new_avail}</b>"
             DISK_PCT=$(df / | awk 'NR==2 {print $5}' | tr -d '%')
             DISK_AVAIL="$new_avail"
-        else tg_alert "Disk KRITIS" "Disk usage: <b>${DISK_PCT}%</b>
-Sisa: <b>${DISK_AVAIL}</b>" "disk"; fi
+        else tg_alert "Disk KRITIS" "Disk usage: <b>${DISK_PCT}%</b>\nSisa: <b>${DISK_AVAIL}</b>" "disk"; fi
     elif [ "$DISK_PCT" -ge "$DISK_WARN" ]; then
-        tg_alert "Disk Warning" "Disk usage: <b>${DISK_PCT}%</b>
-Sisa: <b>${DISK_AVAIL}</b>" "disk"
+        tg_alert "Disk Warning" "Disk usage: <b>${DISK_PCT}%</b>\nSisa: <b>${DISK_AVAIL}</b>" "disk"
     fi
 }
 
